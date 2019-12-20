@@ -1,0 +1,505 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Praca Dyplomowa: Binary Automaton Visualization Tool</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="user-scalable=no, initial-scale=1">
+    <meta name="theme-color" content="#039be5">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="EXPIRES" content="Mon, 22 Jul 2002 11:12:01 GMT">
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <style>
+        @font-face {
+            font-family: latinmodern;
+            src: url("fonts/latinmodern-math.otf") format("opentype");
+        }
+
+        body > canvas {
+            z-index: -10;
+            opacity: 0;
+        }
+
+        body {
+            margin: 0px;
+            background-color: #ffffff;
+            overflow: hidden;
+            opacity: 0;
+            -moz-user-select: -moz-none;
+            -khtml-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            overscroll-behavior-y: none;
+        }
+
+        .latex-font {
+            font-family: latinmodern;
+        }
+
+        #info {
+            position: absolute;
+            top: 0px;
+            width: 100%;
+            color: #ffffff;
+            padding: 5px;
+            font-family: Monospace;
+            font-size: 13px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        a {
+            color: #02aa02;
+        }
+
+        .section {
+            margin-left: 2em;
+            margin-right: 2em;
+        }
+
+        ul.dropdown-content {
+            width: auto !important;
+        }
+
+        #controls {
+            z-index: 20000;
+            opacity: 0;
+        }
+
+        div.section>h5 {
+            margin-bottom: 1em;
+        }
+
+        .modal.bottom-sheet.larger-bottom-sheet {
+            max-height: unset !important;
+        }
+
+        #toast-container {
+            top: 0 !important;
+            bottom: unset !important;
+            margin-top: -10px;
+            max-height: calc(100% - 50px);
+        }
+
+        #vignette {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            min-height: 100%;
+            background: radial-gradient(transparent 60%, rgba(0,0,0,0.2));
+            background-size: cover;
+            z-index: 1;
+        }
+
+        audio {
+            display: none !important;
+        }
+    </style>
+    <link rel="icon" href="icons/icon-small.jpg">
+    <!-- Compiled and minified CSS -->
+    <link rel="stylesheet" href="css/materialize.min.css">
+    <style>
+        /* fallback */
+        @font-face {
+          font-family: 'Material Icons';
+          font-style: normal;
+          font-weight: 400;
+          src: url(fonts/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2) format('woff2');
+        }
+        
+        .material-icons {
+          font-family: 'Material Icons';
+          font-weight: normal;
+          font-style: normal;
+          font-size: 24px;
+          line-height: 1;
+          letter-spacing: normal;
+          text-transform: none;
+          display: inline-block;
+          white-space: nowrap;
+          word-wrap: normal;
+          direction: ltr;
+          -webkit-font-feature-settings: 'liga';
+          font-feature-settings: 'liga';
+          -webkit-font-smoothing: antialiased;
+        }
+    </style>
+    <script type="text/javascript" async src="js/MathJax/latest.js?config=TeX-MML-AM_CHTML"></script>
+    <script defer src="js/materialize.min.js"></script>
+    <script defer src="js/jquery-3.3.1.min.js"></script>
+    <script defer src="js/jquery-ui.min.js"></script>
+    <script defer src="js/stats.min.js"></script>
+    <script defer src="js/three.js"></script>
+    <script defer src="js/graph.js"></script>
+    <script defer src="js/animatable.js"></script>
+    <script defer src="js/settings.js"></script>
+    <script defer src="js/controls/DeviceOrientationControls.js"></script>
+    <script defer src="js/controls/OrbitControls.js"></script>
+    <script defer src="js/Sky.js"></script>
+    <script defer src="js/Water.js"></script>
+    <script defer src="js/general.js"></script>
+</head>
+
+<body style="-moz-user-select: none; -webkit-user-select: none; -ms-user-select:none; user-select:none;-o-user-select:none;"
+    unselectable="on" onselectstart="return false;">
+    <div id="controls" class="fixed-action-btn toolbar direction-top">
+        <a class="btn-floating btn-large waves-effect waves-light pulse" style="background: transparent !important; box-shadow: none !important;"
+            onclick="$(this).removeClass('pulse');">
+            <i class="large material-icons">menu</i>
+        </a>
+        <ul>
+            <li class="waves-effect waves-light">
+                <a class="modal-trigger" data-target="curious-info">
+                    <i class="material-icons">info_outline</i>
+                </a>
+            </li>
+            <li class="waves-effect waves-light">
+                <a class="modal-trigger" data-target="simulation-settings">
+                    <i class="material-icons" id="showhidetextText">settings</i>
+                </a>
+            </li>
+            <li class="waves-effect waves-light" id="fullscreen">
+                <a>
+                    <i class="material-icons" id="fullscreenText">fullscreen</i>
+                </a>
+            </li>
+            <li class="waves-effect waves-light">
+                <a class="modal-trigger" data-target="automaton-chooser">
+                    <i class="material-icons">create</i>
+                </a>
+            </li>
+            <li class="waves-effect waves-light" id="pauseplay">
+                <a>
+                    <i class="material-icons" id="innerText">portable_wifi_off</i>
+                </a>
+            </li>
+            <li class="waves-effect waves-light" id="animate-shortest-path">
+                <a>
+                    <i class="material-icons">play_arrow</i>
+                </a>
+            </li>
+            <li class="waves-effect waves-light" id="flat3d">
+                <a>
+                    <i class="material-icons" id="flat3dText">vertical_align_center</i>
+                </a>
+            </li>
+            <li class="waves-effect waves-light">
+                <a class="disabled" id="resetCenterOfMass">
+                    <i class="material-icons">center_focus_weak</i>
+                </a>
+            </li>
+            <li class="waves-effect waves-light" id="animateBack">
+                <a class="disabled toolbar-forbid-close">
+                    <i class="material-icons">exposure_neg_1</i>
+                </a>
+            </li>
+            <li class="waves-effect waves-light" id="animateForward">
+                <a>
+                    <i class="material-icons">exposure_plus_1</i>
+                </a>
+            </li>
+            <li class="waves-effect waves-light">
+                <a id="showPowerGraph">
+                    \(2^n\)
+                </a>
+                <a id="showNormalNotPowerGraph">
+                    \(n\)
+                </a>
+            </li>
+        </ul>
+
+    </div>
+    <div id="automaton-chooser" class="modal bottom-sheet modal-fixed-footer larger-bottom-sheet">
+        <div class="modal-content">
+            <div class="section">
+                <ul class="collapsible">
+                    <li>
+                        <div class="collapsible-header">Predefined automata</div>
+                        <div class="collapsible-body">
+                            <a class="dropdown-trigger btn   " data-target="predefined-automaton">Choose</a>
+                            <ul id="predefined-automaton" class="dropdown-content">
+                                <li>
+                                    <a class="modal-close" id="generate-karis-automaton">Kari's automaton</a>
+                                </li>
+                                <li class="divider" tabindex="-1"></li>
+                                <li>
+                                    <a class="modal-close" id="generate-extreme-3-automaton">Extreme automaton of size
+                                        3</a>
+                                </li>
+                                <li>
+                                    <a class="modal-close" id="generate-extreme-4-automaton">Extreme automaton of size
+                                        4</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="collapsible-header">Černý automaton</div>
+                        <div class="collapsible-body">
+                            <p>
+                                Please choose the size of \(\mathscr{C}_n\) (the displayed graph is its power
+                                automaton) so its size is actually rendered
+                                as up to \( 2^n \). Please ensure you have enough memory to handle automata larger than
+                                \( 10 \).
+                            </p>
+                            <p class="range-field">
+                                <input type="range" id="cerny-graph-size" min="2" max="14" value="5">
+                            </p>
+                            <a id="cerny-graph-generate" class="modal-close waves-effect waves-light btn   ">Generate</a>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="collapsible-header">Randomize an automaton</div>
+                        <div class="collapsible-body">
+                            <p>
+                                Please choose the size of the random graph (the displayed graph is the power automaton)
+                                so its size is actually rendered
+                                as up to \( 2^n \).
+                            </p>
+                            <p class="range-field">
+                                <input type="range" id="random-graph-size" min="2" max="14" value="5" />
+                            </p>
+                            <a id="random-graph-generate" class="modal-close waves-effect waves-light btn   ">Generate</a>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="collapsible-header">Custom automaton</div>
+                        <div class="collapsible-body">
+                            <p>
+                                Please specify the transition function. The first JSON array specifies the transition
+                                function upon choosing letter \(a\),
+                                and the second specifies letter \(b\). Both arrays are contained in one large array.
+                            </p>
+                            <div class="input-field">
+                                <input id="custom-graph-transitions" type="text" class="validate" placeholder="[[0,1,2],[2,1,0]]">
+                                <label for="custom-graph-transitions">Transition function e.g. \([[0,1,2],[2,1,0]]\)</label>
+                            </div>
+                            <a id="custom-graph-generate" class="modal-close waves-effect waves-light btn   ">Generate</a>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <a class="modal-close waves-effect waves-light btn-flat">Back</a>
+        </div>
+    </div>
+
+    <div id="curious-info" class="modal modal-fixed-footer">
+        <div class="modal-content">
+            <div class="section">
+                <h5>Exciting unobvious features</h5>
+                <ul class="collection">
+                    <li class="collection-item">The automaton is initialized in 5 dimension and then gradually (1min)
+                        compressed to 3 dimensions.</li>
+                    <li class="collection-item">If the vertices travel too fast, the animation is slowed down. Once
+                        particles travel at normal velocities,
+                        the animation speeds up to normal speed.</li>
+                    <li class="collection-item">The larger the power automaton the weaker the forces, since the more
+                        particles the more problems with
+                        computing the repelling force (the automaton unexpectedly shakes).</li>
+
+                    <li class="collection-item">By hovering your cursor over a vertex you will notice the cursor
+                        change, this is so because you can click
+                        on it. By clicking a vertex you make it the focus point. You can always reset your focus point
+                        to
+                        the center of mass.</li>
+                    <li class="collection-item">
+                        This Application makes use of your smartphone's gyroscope and accelerometer. Check out this
+                        website on your mobile device.</li>
+                </ul>
+            </div>
+            <div class="divider"></div>
+            <div class="section">
+                <h5>Credits</h5>
+                <ul class="collection with-header">
+                    <li class="collection-item">
+                        <div>Three.js library creators and contributors
+                            <a href="https://threejs.org/" target="_blank" class="secondary-content">
+                                <i class="material-icons">language</i>
+                            </a>
+                        </div>
+                    </li>
+                    <li class="collection-item">
+                        <div>Materialize Framework creators and contributors
+                            <a href="https://materializecss.com/" target="_blank" class="secondary-content">
+                                <i class="material-icons">language</i>
+                            </a>
+                        </div>
+                    </li>
+                    <li class="collection-item">
+                        <div>MathJax creators and contributors
+                            <a href="https://www.mathjax.org/" target="_blank" class="secondary-content">
+                                <i class="material-icons">language</i>
+                            </a>
+                        </div>
+                    </li>
+                    <li class="collection-item">
+                        <div>jQuery and jQueryUI creators and contributors
+                            <a href="https://jquery.com/" target="_blank" class="secondary-content">
+                                <i class="material-icons">language</i>
+                            </a>
+                        </div>
+                    </li>
+                    <li class="collection-item">
+                        <div>GUST community for the Latin Modern font
+                            <a href="http://www.gust.org.pl/" target="_blank" class="secondary-content">
+                                <i class="material-icons">language</i>
+                            </a>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <a class="modal-close waves-effect waves-light btn-flat">Back</a>
+        </div>
+    </div>
+
+    <div id="simulation-settings" class="modal modal-fixed-footer">
+        <div class="modal-content">
+
+
+            <div class="section">
+                <label>Daytime</label>
+                <p class="range-field">
+                    <input type="range" id="daytime" min="0" max="1" value="0.15" step="0.01" />
+                </p>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="section">
+                <label>Target string length</label>
+                <p class="range-field">
+                    <input type="range" id="string-length" min="0" max="3" value="0.4" step="0.001" />
+                </p>
+            </div>
+
+            <div class="divider"></div>
+            
+            <div class="section">
+                <label>Repelling factor</label>
+                <p class="range-field">
+                    <input type="range" id="automaton-repel" min="-500" max="0" value="-200" step="10" />
+                </p>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="section">
+                <label>String factor</label>
+                <p class="range-field">
+                    <input type="range" id="automaton-string" min="0" max="20" value="5" step="0.1" />
+                </p>
+            </div>
+
+            <div class="divider"></div>
+            <div class="section">
+                <label>Unique string force amplification factor</label>
+                <p class="range-field">
+                    <input type="range" id="automaton-unique-string" min="0" max="20" value="2" step="0.1" />
+                </p>
+            </div>
+
+            <div class="divider"></div>
+            <div class="section">
+                <label>Friciton factor</label>
+                <p class="range-field">
+                    <input type="range" id="automaton-friction" min="0" max="20" value="0" step="0.1" />
+                </p>
+            </div>
+            
+            <div class="divider"></div>
+
+            <div class="section">
+                <div class="input-field col s12">
+                    <select id="automaton-speedup">
+                        <option value="0.1">\( \frac{1}{10} \)</option>
+                        <option value="0.2">\( \frac{1}{5} \)</option>
+                        <option value="0.5">\( \frac{1}{2} \)</option>
+                        <option value="1.0" selected>1</option>
+                        <option value="2.0">2</option>
+                        <option value="5.0">5</option>
+                        <option value="10.0">10</option>
+                    </select>
+                    <label>Speedup</label>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="section">
+                <label>Toggle lights coming from vertices (requires automaton reconstruction)</label>
+                <br>
+                <br>
+                <label>
+                    <input type="checkbox" class="filled-in" id="automaton-lights" />
+                    <span>Enable lights</span>
+                </label>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="section">
+                <p>
+                    <label>
+                        <input name="group1" type="radio" id="quality-smooth" class="with-gap" />
+                        <span>Realistically smooth</span>
+                    </label>
+                </p>
+                <p>
+                    <label>
+                        <input name="group1" type="radio" id="quality-ultra" class="with-gap" />
+                        <span>Ultra Quality</span>
+                    </label>
+                </p>
+                <p>
+                    <label>
+                        <input name="group1" type="radio" id="quality-standard" checked class="with-gap" />
+                        <span>Standard Quality</span>
+                    </label>
+                </p>
+                <p>
+                    <label>
+                        <input name="group1" type="radio" id="quality-low" class="with-gap" />
+                        <span>Low Quality</span>
+                    </label>
+                </p>
+                <p>
+                    <label>
+                        <input name="group1" type="radio" id="quality-minimum" class="with-gap" />
+                        <span>Minimum Quality</span>
+                    </label>
+                </p>
+            </div>
+
+
+        </div>
+        <div class="modal-footer">
+            <a class="modal-close waves-effect waves-light btn-flat">OK</a>
+        </div>
+    </div>
+
+    <div class="preloader-wrapper big active" style="position: absolute;left:0;right:0;bottom:0;top:0;margin: auto auto;">
+        <div class="spinner-layer spinner-blue-only">
+            <div class="circle-clipper left">
+                <div class="circle"></div>
+            </div>
+            <div class="gap-patch">
+                <div class="circle"></div>
+            </div>
+            <div class="circle-clipper right">
+                <div class="circle"></div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
