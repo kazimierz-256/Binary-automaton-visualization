@@ -12,7 +12,7 @@ class settings {
         this.targetFPS = 120;
         this.exploratoryFOV = 75;
         this.focusingFOV = 75;
-        this.showPowerAutomaton = false;
+        this.showPowerAutomaton = true;
         // parameters
         this.shineLights = false;
         this.daytime = 0.15;
