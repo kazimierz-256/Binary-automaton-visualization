@@ -982,35 +982,8 @@ $(document).ready(() => {
 
         var isMobile = ('LinearAccelerationSensor' in window && ('ontouchstart' in window));
 
-        navigator.permissions.query({ name: "accelerometer" }).then(result => {
-            if (result.state != 'granted') {
-                document.title = "Enable sensors in your browser, please.";
-                isMobile = false;
-            }
-        });
-
-        if (isMobile) {
-            navigator.permissions.query({ name: "accelerometer" }).then(result => {
-                if (result.state != 'granted') {
-                    document.title = "Enable sensors in your browser, please.";
-                    return;
-                }
-                init(camera => controls = new THREE.DeviceOrientationControls(camera));
-                // init(camera => {
-                //     controls = new THREE.OrbitControls(camera);
-                // });
-                // for mobile devices
-                if (!('ontouchstart' in window)) {
-                    camera.position.setY(2);
-                    camera.position.setX(4);
-                } else {
-                    // $(".btn-floating").addClass("btn-small");
-                }
-                showGraphFromRequest();
-                animate();
-                startProcessingSensorData();
-            });
-        } else {
+        var launchDesktop = () =>
+        {
             // probably desktop
             // document.title = "Your browser doesn't support sensors.";
             init(camera => {
@@ -1043,6 +1016,32 @@ $(document).ready(() => {
             //     document.title = "stopped";
             // });
             // for mobile devices
+        };
+
+        if (isMobile) {
+            navigator.permissions.query({ name: "accelerometer" }).then(result => {
+                if (result.state != 'granted') {
+                    document.title = "Enable sensors in your browser, please.";
+                    launchDesktop();
+                    return;
+                }
+                init(camera => controls = new THREE.DeviceOrientationControls(camera));
+                // init(camera => {
+                //     controls = new THREE.OrbitControls(camera);
+                // });
+                // for mobile devices
+                if (!('ontouchstart' in window)) {
+                    camera.position.setY(2);
+                    camera.position.setX(4);
+                } else {
+                    // $(".btn-floating").addClass("btn-small");
+                }
+                showGraphFromRequest();
+                animate();
+                startProcessingSensorData();
+            });
+        } else {
+            launchDesktop();
         }
 
         // for mobile devices
