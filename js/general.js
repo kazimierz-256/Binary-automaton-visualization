@@ -983,8 +983,7 @@ $(document).ready(() => {
         if ('LinearAccelerationSensor' in window && ('ontouchstart' in window)) {
             navigator.permissions.query({ name: "accelerometer" }).then(result => {
                 if (result.state != 'granted') {
-                    document.title = "Sorry, we're not allowed to access sensors " +
-                        "on your device..";
+                    document.title = "Enable sensors in your browser, please.";
                     return;
                 }
                 init(camera => controls = new THREE.DeviceOrientationControls(camera));
