@@ -980,7 +980,16 @@ $(document).ready(() => {
             showGraph(generateAction());
         };
 
-        if ('LinearAccelerationSensor' in window && ('ontouchstart' in window)) {
+        var isMobile = ('LinearAccelerationSensor' in window && ('ontouchstart' in window));
+
+        navigator.permissions.query({ name: "accelerometer" }).then(result => {
+            if (result.state != 'granted') {
+                document.title = "Enable sensors in your browser, please.";
+                isMobile = false;
+            }
+        });
+
+        if (isMobile) {
             navigator.permissions.query({ name: "accelerometer" }).then(result => {
                 if (result.state != 'granted') {
                     document.title = "Enable sensors in your browser, please.";
